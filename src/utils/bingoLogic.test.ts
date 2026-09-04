@@ -207,6 +207,41 @@ describe('bingoLogic', () => {
       expect(result?.type).toBe('diagonal');
     });
 
+    it('should detect Four Corners with the exact winning payload', () => {
+      const board = generateBoard();
+      [0, 4, 20, 24].forEach((i) => {
+        board[i].isMarked = true;
+      });
+
+      expect(checkBingo(board)).toEqual({
+        type: 'corners',
+        index: 0,
+        squares: [0, 4, 20, 24],
+      });
+    });
+
+    it('should not detect Four Corners when only three corners are marked', () => {
+      const board = generateBoard();
+      [0, 4, 20].forEach((i) => {
+        board[i].isMarked = true;
+      });
+
+      expect(checkBingo(board)).toBeNull();
+    });
+
+    it('should prefer an existing line over Four Corners', () => {
+      const board = generateBoard();
+      [0, 1, 2, 3, 4, 20, 24].forEach((i) => {
+        board[i].isMarked = true;
+      });
+
+      expect(checkBingo(board)).toEqual({
+        type: 'row',
+        index: 0,
+        squares: [0, 1, 2, 3, 4],
+      });
+    });
+
     it('should work with free space in center', () => {
       const board = generateBoard();
       [10, 11, 12, 13, 14].forEach((i) => {
@@ -396,6 +431,23 @@ describe('bingoLogic', () => {
       expect(line).not.toBeNull();
       const ids = getWinningSquareIds(line);
       expect(ids).toEqual(new Set(lastRowIds));
+    });
+
+    it('should report exactly the four corner IDs after toggling them', () => {
+      let board = generateBoard();
+      const cornerIds = [0, 4, 20, 24];
+
+      cornerIds.forEach((id) => {
+        board = toggleSquare(board, id);
+      });
+
+      const line = checkBingo(board);
+      expect(line).toEqual({
+        type: 'corners',
+        index: 0,
+        squares: cornerIds,
+      });
+      expect(getWinningSquareIds(line)).toEqual(new Set(cornerIds));
     });
   });
 });

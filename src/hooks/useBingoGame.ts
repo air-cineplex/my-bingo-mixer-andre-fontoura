@@ -73,7 +73,7 @@ function validateStoredData(data: unknown): data is StoredGameData {
     const line = obj.winningLine as Record<string, unknown>;
     if (
       typeof line.type !== 'string' ||
-      !['row', 'column', 'diagonal'].includes(line.type) ||
+      !['row', 'column', 'diagonal', 'corners'].includes(line.type) ||
       typeof line.index !== 'number' ||
       !Array.isArray(line.squares)
     ) {
