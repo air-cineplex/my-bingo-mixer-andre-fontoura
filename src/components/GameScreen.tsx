@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import type { BingoSquareData } from '../types';
 import { BingoBoard } from './BingoBoard';
 
@@ -7,6 +8,7 @@ interface GameScreenProps {
   hasBingo: boolean;
   onSquareClick: (squareId: number) => void;
   onReset: () => void;
+  themeSelector: ReactNode;
 }
 
 export function GameScreen({
@@ -15,41 +17,51 @@ export function GameScreen({
   hasBingo,
   onSquareClick,
   onReset,
+  themeSelector,
 }: GameScreenProps) {
   return (
-    <div className="flex flex-col min-h-full bg-gray-50">
-      {/* Header */}
-      <header className="flex items-center justify-between p-3 bg-white border-b border-gray-200">
-        <button
-          onClick={onReset}
-          className="text-gray-500 text-sm px-3 py-1.5 rounded active:bg-gray-100"
-        >
-          ← Back
-        </button>
-        <h1 className="font-bold text-gray-900">Bingo Mixer</h1>
-        <div className="w-16"></div>
-      </header>
+    <main className="editorial-grid min-h-full bg-paper px-4 py-4 text-ink sm:px-8 sm:py-6">
+      <div className="page-reveal mx-auto flex min-h-[calc(100dvh-2rem)] w-full max-w-2xl flex-col sm:min-h-[calc(100dvh-3rem)]">
+        <header className="grid grid-cols-[auto_1fr] items-center gap-3 border-y-2 border-rule py-3 sm:grid-cols-[1fr_auto_1fr]">
+          <button
+            onClick={onReset}
+            className="flex size-10 items-center justify-center border border-rule bg-paper font-mono text-lg transition-colors hover:bg-ink hover:text-paper"
+            aria-label="Back to start"
+            title="Back to start"
+          >
+            ←
+          </button>
+          <div className="text-right sm:order-3">{themeSelector}</div>
+          <div className="col-span-2 border-t border-rule pt-3 sm:order-2 sm:col-span-1 sm:border-0 sm:pt-0 sm:text-center">
+            <p className="text-xl font-black uppercase leading-none">Bingo Mixer</p>
+            <p className="mt-1 font-mono text-[0.625rem] font-bold uppercase text-muted">Live board / 5 × 5</p>
+          </div>
+        </header>
 
-      {/* Instructions */}
-      <p className="text-center text-gray-500 text-sm py-2 px-4">
-        Tap a square when you find someone who matches it.
-      </p>
-
-      {/* Bingo indicator */}
-      {hasBingo && (
-        <div className="bg-amber-100 text-amber-800 text-center py-2 font-semibold text-sm">
-          🎉 BINGO! You got a line!
+        <div className="flex items-center justify-between gap-4 border-b border-rule py-3 font-mono text-[0.625rem] font-bold uppercase text-muted">
+          <p>Tap a matching square</p>
+          <p aria-live="polite">{hasBingo ? 'Line complete' : 'In progress'}</p>
         </div>
-      )}
 
-      {/* Board */}
-      <div className="flex-1 flex items-center justify-center p-3">
+        {hasBingo && (
+          <div className="border-b-2 border-rule bg-ink py-2 text-center font-mono text-xs font-bold uppercase text-paper">
+            Bingo / You completed a line
+          </div>
+        )}
+
+        <div className="flex flex-1 items-center justify-center py-4 sm:py-6">
         <BingoBoard
           board={board}
           winningSquareIds={winningSquareIds}
           onSquareClick={onSquareClick}
         />
+        </div>
+
+        <footer className="flex justify-between border-t border-rule py-3 font-mono text-[0.625rem] font-bold uppercase text-muted">
+          <span>25 prompts</span>
+          <span>Five makes a line</span>
+        </footer>
       </div>
-    </div>
+    </main>
   );
 }
