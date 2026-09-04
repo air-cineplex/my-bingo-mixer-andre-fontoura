@@ -8,7 +8,7 @@ export interface BingoSquareData {
 }
 
 export interface BingoLine {
-  type: 'row' | 'column' | 'diagonal' | 'corners';
+  type: 'row' | 'column' | 'diagonal' | 'corners' | 'cross';
   index: number;
   squares: number[];
 }

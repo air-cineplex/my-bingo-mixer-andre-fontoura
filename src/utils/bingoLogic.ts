@@ -66,6 +66,13 @@ export function toggleSquare(board: BingoSquareData[], squareId: number): BingoS
 function getWinningLines(): BingoLine[] {
   const lines: BingoLine[] = [];
 
+  // Cross (center row + center column)
+  lines.push({
+    type: 'cross',
+    index: 0,
+    squares: [2, 7, 10, 11, 12, 13, 14, 17, 22],
+  });
+
   // Rows
   for (let row = 0; row < BOARD_SIZE; row++) {
     const squares = [];

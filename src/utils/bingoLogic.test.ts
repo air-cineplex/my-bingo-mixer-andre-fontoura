@@ -242,6 +242,93 @@ describe('bingoLogic', () => {
       });
     });
 
+    it('should win the game when the full cross (center row + center column) is marked', () => {
+      const board = generateBoard();
+      // Cross = center row (10, 11, 12, 13, 14) + center column (2, 7, 12, 17, 22)
+      // 12 is already marked as the free space
+      [2, 7, 10, 11, 13, 14, 17, 22].forEach((i) => {
+        board[i].isMarked = true;
+      });
+
+      const result = checkBingo(board);
+      // Design decision: the cross is a distinct named win pattern (like
+      // 'corners') and is evaluated BEFORE the individual rows, columns and
+      // diagonals, so completing the cross reports the cross win itself.
+      // The relative order of the existing lines (rows, columns, diagonals,
+      // corners) is unchanged.
+      expect(result).not.toBeNull();
+      expect(result).toEqual({
+        type: 'cross',
+        index: 0,
+        squares: [2, 7, 10, 11, 12, 13, 14, 17, 22],
+      });
+    });
+
+    it('should not detect a win when the cross completes neither the center row nor the center column', () => {
+      const board = generateBoard();
+      // 6 of the 8 non-free cross squares: missing 14 (breaks center row)
+      // and missing 22 (breaks center column)
+      [2, 7, 10, 11, 13, 17].forEach((i) => {
+        board[i].isMarked = true;
+      });
+
+      expect(checkBingo(board)).toBeNull();
+    });
+
+    it('should not detect the cross when only the center row is complete', () => {
+      const board = generateBoard();
+      // Center row only (12 is already marked as the free space);
+      // no center column squares (2, 7, 17, 22) are marked
+      [10, 11, 13, 14].forEach((i) => {
+        board[i].isMarked = true;
+      });
+
+      const result = checkBingo(board);
+      expect(result).not.toBeNull();
+      expect(result?.type).not.toBe('cross');
+      expect(result).toEqual({
+        type: 'row',
+        index: 2,
+        squares: [10, 11, 12, 13, 14],
+      });
+    });
+
+    it('should not detect the cross when only the center column is complete', () => {
+      const board = generateBoard();
+      // Center column only (12 is already marked as the free space);
+      // no center row squares (10, 11, 13, 14) are marked
+      [2, 7, 17, 22].forEach((i) => {
+        board[i].isMarked = true;
+      });
+
+      const result = checkBingo(board);
+      expect(result).not.toBeNull();
+      expect(result?.type).not.toBe('cross');
+      expect(result).toEqual({
+        type: 'column',
+        index: 2,
+        squares: [2, 7, 12, 17, 22],
+      });
+    });
+
+    it('should include the cross in the winning lines with the exact payload', () => {
+      const board = generateBoard();
+      // Complete the cross: center row (10-14) + center column (2, 7, 12, 17, 22)
+      [2, 7, 10, 11, 13, 14, 17, 22].forEach((i) => {
+        board[i].isMarked = true;
+      });
+
+      // RED: fails until the cross line { type: 'cross', index: 0, squares: [2, 7, 10, 11, 12, 13, 14, 17, 22] }
+      // is appended to the winning lines (after 'corners'). Note: on a full cross
+      // the center row fires first per line precedence, so this assertion
+      // documents the intended cross contract for the Green phase.
+      expect(checkBingo(board)).toEqual({
+        type: 'cross',
+        index: 0,
+        squares: [2, 7, 10, 11, 12, 13, 14, 17, 22],
+      });
+    });
+
     it('should work with free space in center', () => {
       const board = generateBoard();
       [10, 11, 12, 13, 14].forEach((i) => {
@@ -391,6 +478,20 @@ describe('bingoLogic', () => {
         expect(result.has(id)).toBe(true);
       });
     });
+
+    it('should handle cross winning line', () => {
+      const winningLine = {
+        type: 'cross' as const,
+        index: 0,
+        squares: [2, 7, 10, 11, 12, 13, 14, 17, 22],
+      };
+      const result = getWinningSquareIds(winningLine);
+      expect(result).toBeInstanceOf(Set);
+      expect(result.size).toBe(9);
+      [2, 7, 10, 11, 12, 13, 14, 17, 22].forEach((id) => {
+        expect(result.has(id)).toBe(true);
+      });
+    });
   });
 
   describe('integration: generateBoard + toggleSquare + checkBingo', () => {
@@ -448,6 +549,31 @@ describe('bingoLogic', () => {
         squares: cornerIds,
       });
       expect(getWinningSquareIds(line)).toEqual(new Set(cornerIds));
+    });
+
+    it('should win the game after toggling the cross squares', () => {
+      let board = generateBoard();
+      // Toggle order chosen so that neither the center row nor the center
+      // column completes early: after these 6 toggles both lines are still
+      // missing one square (14 for the row, 22 for the column)
+      [10, 11, 13, 2, 7, 17].forEach((id) => {
+        board = toggleSquare(board, id);
+      });
+      expect(checkBingo(board)).toBeNull();
+
+      // Toggling 22 completes the center column (2, 7, 12, 17, 22) — game won
+      board = toggleSquare(board, 22);
+      const line = checkBingo(board);
+      expect(line).toEqual({
+        type: 'column',
+        index: 2,
+        squares: [2, 7, 12, 17, 22],
+      });
+      expect(getWinningSquareIds(line)).toEqual(new Set([2, 7, 12, 17, 22]));
+
+      // Toggling 14 also completes the center row — cross fully marked, still won
+      board = toggleSquare(board, 14);
+      expect(checkBingo(board)).not.toBeNull();
     });
   });
 });
