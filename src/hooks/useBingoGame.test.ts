@@ -4,6 +4,7 @@ import { useBingoGame } from './useBingoGame';
 
 const STORAGE_KEY = 'bingo-game-state';
 const CORNER_IDS = [0, 4, 20, 24];
+const CROSS_IDS = [2, 7, 10, 11, 12, 13, 14, 17, 22];
 
 describe('useBingoGame', () => {
   beforeEach(() => {
@@ -38,5 +39,32 @@ describe('useBingoGame', () => {
 
     expect(result.current.winningLine).toEqual(winningLine);
     expect(result.current.winningSquareIds).toEqual(new Set(CORNER_IDS));
+  });
+
+  it('restores a persisted Cross winning line and its square IDs', () => {
+    const board = Array.from({ length: 25 }, (_, id) => ({
+      id,
+      text: id === 12 ? 'Free' : `Question ${id}`,
+      isMarked: id === 12 || CROSS_IDS.includes(id),
+      isFreeSpace: id === 12,
+    }));
+    const winningLine = {
+      type: 'cross' as const,
+      index: 0,
+      squares: CROSS_IDS,
+    };
+
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      version: 1,
+      gameState: 'bingo',
+      board,
+      winningLine,
+    }));
+
+    const { result } = renderHook(() => useBingoGame());
+
+    expect(result.current.gameState).toBe('bingo');
+    expect(result.current.winningLine).toEqual(winningLine);
+    expect(result.current.winningSquareIds).toEqual(new Set(CROSS_IDS));
   });
 });

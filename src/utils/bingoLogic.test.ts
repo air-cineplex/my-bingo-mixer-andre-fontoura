@@ -251,13 +251,17 @@ describe('bingoLogic', () => {
       });
 
       const result = checkBingo(board);
-      // A completed cross always completes the center row and center column,
-      // so per the existing line order (rows before columns) row 2 wins first.
-      // Either way, the game IS won when the cross is complete.
+      // Design decision: the cross is a distinct named win pattern (like
+      // 'corners') and is evaluated BEFORE the individual rows, columns and
+      // diagonals, so completing the cross reports the cross win itself.
+      // The relative order of the existing lines (rows, columns, diagonals,
+      // corners) is unchanged.
       expect(result).not.toBeNull();
-      expect(result?.type).toBe('row');
-      expect(result?.index).toBe(2);
-      expect(result?.squares).toEqual([10, 11, 12, 13, 14]);
+      expect(result).toEqual({
+        type: 'cross',
+        index: 0,
+        squares: [2, 7, 10, 11, 12, 13, 14, 17, 22],
+      });
     });
 
     it('should not detect a win when the cross completes neither the center row nor the center column', () => {
